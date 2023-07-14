@@ -24,12 +24,12 @@ def gen_frame():
 
     # Variable
     parpadeo = False
-    conteo = 0
+    conteo_parpadeos = 0
     tiempo = 0
     inicio = 0
     final = 0
-    conteo_sue = 0
-    muestra = 0
+    conteo_microsuenos = 0
+    duracion_muestra = 0
 
     # Empezamos
     while True:
@@ -80,30 +80,29 @@ def gen_frame():
                             x4, y4 = lista[386][1:]
 
                             longitud2 = math.hypot(x4 - x3, y4 - y3)
-                            
-                            cv2.putText(frame, f'parpadeos: {int(conteo)}', (30, 60), cv2.FONT_HERSHEY_SIMPLEX, 1,
+
+                            cv2.putText(frame, f'Parpadeos: {int(conteo_parpadeos)}', (30, 60), cv2.FONT_HERSHEY_SIMPLEX, 1,
                                         (0, 255, 0), 2)
-                            cv2.putText(frame, f'Micro Suenos: {int(conteo)}', (380, 60), cv2.FONT_HERSHEY_SIMPLEX, 1,
+                            cv2.putText(frame, f'Micro Suenos: {int(conteo_microsuenos)}', (380, 60), cv2.FONT_HERSHEY_SIMPLEX, 1,
                                         (0, 0, 255), 2)
-                            cv2.putText(frame, f'Duracion: {int(muestra)}', (210, 450), cv2.FONT_HERSHEY_SIMPLEX, 1, 
+                            cv2.putText(frame, f'Duracion: {int(duracion_muestra)}', (210, 450), cv2.FONT_HERSHEY_SIMPLEX, 1, 
                                         (0, 0, 255), 2)
 
-                            
-                            # If's
-                            if longitud1 <= 10 and longitud2 <= 10 and parpadeo == False:
-                                conteo = conteo + 1
+                            # Detectar parpadeos
+                            if longitud1 <= 10 and longitud2 <= 10 and not parpadeo:
+                                conteo_parpadeos += 1
                                 parpadeo = True
                                 inicio = time.time()
 
-                            elif longitud2 > 10 and longitud1 > 10 and parpadeo == True:
+                            elif longitud2 > 10 and longitud1 > 10 and parpadeo:
                                 parpadeo = False
                                 final = time.time()
 
                             tiempo = round(final - inicio, 0)
 
                             if tiempo >= 3:
-                                conteo_sue = conteo_sue + 1
-                                muestra = tiempo
+                                conteo_microsuenos += 1
+                                duracion_muestra = tiempo
                                 inicio = 0
                                 final = 0
 
@@ -114,7 +113,7 @@ def gen_frame():
 
         yield(b'--frame\r\n'
               b'content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
-        
+
 # Ruta de aplicacion 'principal'
 @app.route('/')
 def index():

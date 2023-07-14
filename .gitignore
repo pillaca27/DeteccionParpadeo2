@@ -1,0 +1,15 @@
+# Ignorar archivos y directorios generados automáticamente
+__pycache__/
+*.pyc
+
+# Ignorar archivos de entorno virtual de Python
+venv/
+env/
+
+# Ignorar archivos de registro y salida
+*.log
+*.txt
+
+# Ignorar archivos y directorios específicos
+config.ini
+data/
