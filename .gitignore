@@ -6,10 +6,6 @@ __pycache__/
 venv/
 env/
 
-# Ignorar archivos de registro y salida
-*.log
-*.txt
-
 # Ignorar archivos y directorios específicos
 config.ini
 data/

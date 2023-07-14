@@ -4,6 +4,27 @@ import cv2
 import mediapipe as mp
 import math
 import time
+# import pymysql
+
+# Obtener los valores de la URL de conexión
+# url = 'jdbc:mysql://localhost:3306/Deteccion_Parpadeos?serverTimezone=UTC'
+
+# # Extraer los valores del host, usuario, contraseña y nombre de la base de datos
+# host = url.split('//')[1].split(':')[0]
+# user = 'root'  # Inserta el nombre de usuario correspondiente
+# password = 'mysql'  # Inserta la contraseña correspondiente
+# database = url.split('/')[-1].split('?')[0]
+
+# # Establecer la conexión a la base de datos
+# conn = pymysql.connect(
+#     host=host,
+#     user=user,
+#     password=password,
+#     database=database
+# )
+
+# Crear un cursor
+# cursor = conn.cursor()
 
 # Creamos nuestra funcion de dibujo
 mpDibujo = mp.solutions.drawing_utils
@@ -95,6 +116,14 @@ def gen_frame():
                                 parpadeo = True
                                 inicio = time.time()
 
+                                # Insertar el conteo en la base de datos
+                                #sql = "UPDATE PARPADEO SET conteo = %s WHERE idparpadeo = 1"
+                                #val = (conteo,)
+                                #cursor.execute(sql, val)
+
+                                # Confirmar los cambios en la base de datos
+                                #conn.commit()
+
                             elif longitud2 > 10 and longitud1 > 10 and parpadeo == True:
                                 parpadeo = False
                                 final = time.time()
@@ -114,7 +143,11 @@ def gen_frame():
 
         yield(b'--frame\r\n'
               b'content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
-        
+    
+    # Cerrar el cursor y la conexión
+    #cursor.close()
+    #conn.close()
+
 # Ruta de aplicacion 'principal'
 @app.route('/')
 def index():
