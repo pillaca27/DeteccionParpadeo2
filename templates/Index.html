@@ -12,7 +12,7 @@
         padding : 0;
         width : 100%;
         height : 100vh;
-        background-color: #F7DC6F;
+        background-color: white;
         color : black;
         text-align : center;
         }
@@ -20,9 +20,22 @@
 </head>
 
 <body class = "container">
-    <h1>DETECCION DE PARPADEOS</h1>
+    <h1>Bienvenido, {{ username }} a Detección de Parpadeos</h1>
     <div>
-        <img src="{{url_for('video')}}" width = "50%"/>
+        {% if encender_camara %}
+            <p>La cámara está encendida.</p>
+            <img src="{{url_for('video')}}" width = "50%"/>
+        {% else %}
+            <p>La cámara está apagada.</p>
+        {% endif %}
+
+        <!-- {% with mensaje_microsueno = get_flashed_messages(category_filter='mensaje_microsueno') %}
+            {% if mensaje_microsueno %}
+                <div class="alert alert-info">
+                    {{ mensaje_microsueno[0] }}
+                </div>
+            {% endif %}
+        {% endwith %} -->
     </div>
 </body>
 </html>

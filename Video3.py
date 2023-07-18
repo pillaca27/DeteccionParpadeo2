@@ -1,10 +1,10 @@
 # Importamos librerias
-from flask import Flask, render_template, Response, request, redirect, url_for, session, has_request_context
+from flask import Flask, render_template, Response, request, redirect, url_for
 import cv2
 import mediapipe as mp
 import math
 import time
-import os
+# import pymysql
 import pyodbc
 
 # Establecer los valores de la conexión
@@ -37,28 +37,6 @@ cap = cv2.VideoCapture(0)
 # Creamos la app
 app = Flask(__name__)
 
-clave_secreta = '9f5b6e14e8d89c993e568d3b520c4f0122f56fd4c688956c'
-
-app.config['SECRET_KEY'] = clave_secreta
-app.config['SESSION_COOKIE_SECURE'] = False
-app.config['SESSION_COOKIE_HTTPONLY'] = True
-
-
-# def enviar_mensaje():
-#     # Almacenar el mensaje en una variable de sesión
-#     mensaje = "Se ha detectado un microsueño"
-#     session['mensaje_microsueno'] = mensaje
-
-#     # Redirigir a la página principal
-#     return redirect(url_for('index'))
-
-# def enviar_mensaje_microsueno():
-#     # Verificar si el usuario no es "Docente"
-#     username = session.get('username')
-#     if username != "Docente":
-#         # Ejecutar la función para enviar el mensaje
-#         enviar_mensaje()
-
 # Mostramos el video en RT
 def gen_frame():
     # Variable
@@ -69,13 +47,6 @@ def gen_frame():
     final = 0
     conteo_sue = 0
     muestra = 0
-
-     # Insertar el conteo en la base de datos
-    sql = "UPDATE DETECCION_PARPADEO SET CONTADOR = ? WHERE IDDETECCION = 1"
-    val = (conteo_sue,)
-    cursor.execute(sql, val)
-
-    conn.commit()
 
     # Empezamos
     while True:
@@ -140,6 +111,13 @@ def gen_frame():
                                 conteo = conteo + 1
                                 parpadeo = True
                                 inicio = time.time()
+
+                                # Insertar el conteo en la base de datos
+                                sql = "UPDATE DETECCION_PARPADEO SET CONTADOR = ? WHERE IDDETECCION = 1"
+                                val = (conteo,)
+                                cursor.execute(sql, val)
+
+                                conn.commit()
                                 # Insertar el conteo en la base de datos
                                 #sql = "UPDATE PARPADEO SET conteo = %s WHERE idparpadeo = 1"
                                 #val = (conteo,)
@@ -159,15 +137,6 @@ def gen_frame():
                                 muestra = tiempo
                                 inicio = 0
                                 final = 0
-
-                                # Insertar el conteo en la base de datos
-                                sql = "UPDATE DETECCION_PARPADEO SET CONTADOR = ? WHERE IDDETECCION = 1"
-                                val = (conteo_sue,)
-                                cursor.execute(sql, val)
-
-                                conn.commit()
-                                
-                                # enviar_mensaje_microsueno()
 
 
             # Codificamos nuestro video en Bytes
@@ -199,10 +168,6 @@ def login():
                 encender_camara = False
             else:
                 encender_camara = True
-
-            # Guardar el nombre del usuario en la sesión
-            session['username'] = username 
-
             # Credenciales válidas, redireccionar a la página principal
             return redirect(url_for('index', encender_camara=encender_camara))
         else:
@@ -216,10 +181,7 @@ def login():
 @app.route('/index')
 def index():
     encender_camara = request.args.get('encender_camara', default='True', type=str) == 'True'
-    
-    username = session.get('username')
-
-    return render_template('Index.html', encender_camara=encender_camara, username=username)
+    return render_template('Index.html', encender_camara=encender_camara)
 
 # Ruta del video
 @app.route('/video')

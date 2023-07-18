@@ -5,6 +5,24 @@ import mediapipe as mp
 import math
 import time
 # import pymysql
+import pyodbc
+
+
+# Establecer los valores de la conexión
+server = '20.51.212.0'  # Dirección IP o nombre del servidor SQL Server
+port = '62913'  # Número de puerto del servidor SQL Server
+database = 'Spring_CanevaroSaneamiento'  # Nombre de la base de datos
+username = 'caja'  # Nombre de usuario para autenticación
+password = 'cajaCusco2021'  # Contraseña del usuario
+
+# Construir la cadena de conexión
+connection_string = f"DRIVER={{ODBC Driver 17 for SQL Server}};SERVER={server},{port};DATABASE={database};UID={username};PWD={password}"
+
+# Establecer la conexión a la base de datos
+conn = pyodbc.connect(connection_string)
+
+# Crear un cursor
+cursor = conn.cursor()
 
 # Obtener los valores de la URL de conexión
 # url = 'jdbc:mysql://localhost:3306/Deteccion_Parpadeos?serverTimezone=UTC'
@@ -102,10 +120,10 @@ def gen_frame():
 
                             longitud2 = math.hypot(x4 - x3, y4 - y3)
                             
-                            cv2.putText(frame, f'parpadeos: {int(conteo)}', (30, 60), cv2.FONT_HERSHEY_SIMPLEX, 1,
+                            cv2.putText(frame, f'Parpadeos: {int(conteo)}', (30, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.8,
                                         (0, 255, 0), 2)
-                            cv2.putText(frame, f'Micro Suenos: {int(conteo)}', (380, 60), cv2.FONT_HERSHEY_SIMPLEX, 1,
-                                        (0, 0, 255), 2)
+                            cv2.putText(frame, f'Micro Suenos: {int(conteo_sue)}', (380, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.8,
+                                        (0, 0, 240), 2)
                             cv2.putText(frame, f'Duracion: {int(muestra)}', (210, 450), cv2.FONT_HERSHEY_SIMPLEX, 1, 
                                         (0, 0, 255), 2)
 
@@ -116,6 +134,12 @@ def gen_frame():
                                 parpadeo = True
                                 inicio = time.time()
 
+                                # Insertar el conteo en la base de datos
+                                sql = "UPDATE DETECCION_PARPADEO SET CONTADOR = ? WHERE IDDETECCION = 1"
+                                val = (conteo,)
+                                cursor.execute(sql, val)
+
+                                conn.commit()
                                 # Insertar el conteo en la base de datos
                                 #sql = "UPDATE PARPADEO SET conteo = %s WHERE idparpadeo = 1"
                                 #val = (conteo,)
@@ -145,6 +169,8 @@ def gen_frame():
               b'content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
     
     # Cerrar el cursor y la conexión
+    cursor.close()
+    conn.close()
     #cursor.close()
     #conn.close()
 
