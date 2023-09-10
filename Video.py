@@ -4,6 +4,7 @@ import cv2
 import mediapipe as mp
 import math
 import time
+import pygame.mixer
 # import pymysql
 import pyodbc
 
@@ -52,6 +53,15 @@ confDibu = mpDibujo.DrawingSpec(thickness=1, circle_radius=1)
 mpMallaFacial = mp.solutions.face_mesh
 MallaFacial = mpMallaFacial.FaceMesh(max_num_faces=1)
 
+#variales de detección
+reproducir_sonido = False
+tiempo_transcurrido = 0
+
+pygame.mixer.init()
+
+# Define el sonido que deseas reproducir
+sonido = pygame.mixer.Sound('alarma_toque_de_queda.wav')
+
 # Realizamos la Videocaptura
 cap = cv2.VideoCapture(0)
 
@@ -60,6 +70,8 @@ app = Flask(__name__)
 
 # Mostramos el video en RT
 def gen_frame():
+
+    global reproducir_sonido, tiempo_transcurrido
 
     # Variable
     parpadeo = False
@@ -128,37 +140,53 @@ def gen_frame():
                                         (0, 0, 255), 2)
 
                             
-                            # If's
                             if longitud1 <= 10 and longitud2 <= 10 and parpadeo == False:
+                                print("Blink detected")
                                 conteo = conteo + 1
                                 parpadeo = True
                                 inicio = time.time()
 
-                                # Insertar el conteo en la base de datos
-                                sql = "UPDATE DETECCION_PARPADEO SET CONTADOR = ? WHERE IDDETECCION = 1"
-                                val = (conteo,)
-                                cursor.execute(sql, val)
-
-                                conn.commit()
-                                # Insertar el conteo en la base de datos
-                                #sql = "UPDATE PARPADEO SET conteo = %s WHERE idparpadeo = 1"
-                                #val = (conteo,)
-                                #cursor.execute(sql, val)
-
-                                # Confirmar los cambios en la base de datos
-                                #conn.commit()
+                                # # Insert the blink count into the database
+                                # sql = "UPDATE DETECCION_PARPADEO SET CONTADOR = ? WHERE IDDETECCION = 1"
+                                # val = (conteo,)
+                                # cursor.execute(sql, val)
+                                # conn.commit()
 
                             elif longitud2 > 10 and longitud1 > 10 and parpadeo == True:
+                                print("Blink ended")
                                 parpadeo = False
                                 final = time.time()
 
                             tiempo = round(final - inicio, 0)
+                            #print("Tiempo:", tiempo)
 
-                            if tiempo >= 3:
+                            if tiempo >= 6:
+                                print("Micro-sleep detected")
                                 conteo_sue = conteo_sue + 1
                                 muestra = tiempo
                                 inicio = 0
                                 final = 0
+
+                                # Reproducir el sonido solo si no se está reproduciendo actualmente
+                                if not reproducir_sonido:
+                                    sonido.play()  # Reproduce el sonido
+                                    tiempo_transcurrido = 0  # Restablece el contador de tiempo
+                                    reproducir_sonido = True
+
+                                # Mostrar el marco rojo durante 3 segundos
+                                if tiempo_transcurrido < 3:
+                                    cv2.rectangle(frame, (0, 0), (an, al), (0, 0, 255), -1)  # Dibuja un rectángulo rojo en todo el fotograma
+                                else:
+                                    reproducir_sonido = False  # Desactiva el sonido
+                                    sonido.stop()  # Detiene la reproducción del sonido
+
+                                tiempo_transcurrido += 1
+
+                                sql = "UPDATE DETECCION_PARPADEO SET CONTADOR = ? WHERE IDDETECCION = 1"
+                                val = (conteo_sue,)
+                                cursor.execute(sql, val)
+                                conn.commit()
+
 
 
             # Codificamos nuestro video en Bytes

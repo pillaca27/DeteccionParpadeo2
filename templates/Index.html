@@ -20,7 +20,11 @@
 </head>
 
 <body class = "container">
-    <h1>Bienvenido, {{ username }} a Detección de Parpadeos</h1>
+    <h1>Bienvenido {{ username }} a Detección de Parpadeos</h1>
+    <div>
+        <img src="{{url_for('video')}}" width = "50%"/>
+    </div>
+    <!-- 
     <div>
         {% if encender_camara %}
             <p>La cámara está encendida.</p>
@@ -29,13 +33,19 @@
             <p>La cámara está apagada.</p>
         {% endif %}
 
-        <!-- {% with mensaje_microsueno = get_flashed_messages(category_filter='mensaje_microsueno') %}
+        {% if username == 'DPPD' %}
+            <form action="{{ url_for('registrar_clase') }}" method="post">
+                <input type="text" name="nombre_clase" placeholder="Nombre de la Clase" required>
+                <button type="submit">Registrar Clase</button>
+            </form>
+        {% endif %}
+        {% with mensaje_microsueno = get_flashed_messages(category_filter='mensaje_microsueno') %}
             {% if mensaje_microsueno %}
                 <div class="alert alert-info">
                     {{ mensaje_microsueno[0] }}
                 </div>
             {% endif %}
-        {% endwith %} -->
-    </div>
+        {% endwith %}
+    </div> -->
 </body>
 </html>

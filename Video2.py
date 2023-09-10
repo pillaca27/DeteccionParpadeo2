@@ -6,6 +6,7 @@ import math
 import time
 import os
 import pyodbc
+import datetime
 
 # Establecer los valores de la conexión
 server = '20.51.212.0'  # Dirección IP o nombre del servidor SQL Server
@@ -71,11 +72,11 @@ def gen_frame():
     muestra = 0
 
      # Insertar el conteo en la base de datos
-    sql = "UPDATE DETECCION_PARPADEO SET CONTADOR = ? WHERE IDDETECCION = 1"
-    val = (conteo_sue,)
-    cursor.execute(sql, val)
+    # sql = "UPDATE DETECCION_PARPADEO SET CONTADOR = ? WHERE IDDETECCION = 1"
+    # val = (conteo_sue,)
+    # cursor.execute(sql, val)
 
-    conn.commit()
+    # conn.commit()
 
     # Empezamos
     while True:
@@ -161,11 +162,29 @@ def gen_frame():
                                 final = 0
 
                                 # Insertar el conteo en la base de datos
-                                sql = "UPDATE DETECCION_PARPADEO SET CONTADOR = ? WHERE IDDETECCION = 1"
-                                val = (conteo_sue,)
-                                cursor.execute(sql, val)
+                                # sql = "UPDATE DETECCION_PARPADEO SET CONTADOR = ? WHERE IDDETECCION = 1"
+                                # val = (conteo_sue,)
+                                # cursor.execute(sql, val)
 
-                                conn.commit()
+                                # conn.commit()
+                                with conn.cursor() as cursor:
+                                    ClaseAlumnoID = 1  # Cambia este valor según tus necesidades
+
+                                    # Verificar si ya existe un registro con el mismo ClaseAlumnoID
+                                    cursor.execute(f"SELECT MAX(DeteccionID) FROM PyEye_Deteccion_Parpadeo WHERE ClaseAlumnoID = {ClaseAlumnoID}")
+                                    row = cursor.fetchone()
+                                    if row[0] is not None:
+                                        DeteccionID = row[0] + 1
+                                    else:
+                                        DeteccionID = 1
+
+                                    # Insertar el nuevo registro en la tabla
+                                    hora_registro = datetime.datetime.now()
+                                    cursor.execute("INSERT INTO PyEye_Deteccion_Parpadeo (DeteccionID, ClaseAlumnoID, HoraRegistro) VALUES (?, ?, ?)",
+                                                DeteccionID, ClaseAlumnoID, hora_registro)
+                                    conn.commit()
+
+                                # Cerrar la conexión
                                 
                                 # enviar_mensaje_microsueno()
 
@@ -189,26 +208,27 @@ def login():
         password = request.form['password']
         
         # Verificar las credenciales en la base de datos
-        sql = "SELECT * FROM USUARIO_PARPADEO WHERE NOMBRE = ? AND CLAVE = ?"
-        val = (username, password)
-        cursor.execute(sql, val)
-        result = cursor.fetchone()
-        
-        if result:
-            if username == "Docente":
-                encender_camara = False
+        with conn.cursor() as cursor:
+            sql = "SELECT * FROM PyEye_Usuario WHERE USUARIO = ? AND CLAVE = ?"
+            val = (username, password)
+            cursor.execute(sql, val)
+            result = cursor.fetchone()
+            
+            if result:
+                if username == "DPPD":
+                    encender_camara = False
+                else:
+                    encender_camara = True
+
+                # Guardar el nombre del usuario en la sesión
+                session['username'] = username 
+
+                # Credenciales válidas, redireccionar a la página principal
+                return redirect(url_for('index', encender_camara=encender_camara))
             else:
-                encender_camara = True
-
-            # Guardar el nombre del usuario en la sesión
-            session['username'] = username 
-
-            # Credenciales válidas, redireccionar a la página principal
-            return redirect(url_for('index', encender_camara=encender_camara))
-        else:
-            # Credenciales inválidas, mostrar un mensaje de error
-            error_message = "Credenciales inválidas. Inténtalo de nuevo."
-            return render_template('login.html', error_message=error_message)
+                # Credenciales inválidas, mostrar un mensaje de error
+                error_message = "Credenciales inválidas. Inténtalo de nuevo."
+                return render_template('login.html', error_message=error_message)
     else:
         return render_template('login.html')
 
@@ -225,6 +245,35 @@ def index():
 @app.route('/video')
 def video():
     return Response(gen_frame(), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+# Ruta para registrar clase
+@app.route('/registrar_clase', methods=['POST'])
+def registrar_clase():
+    if session.get('username') == 'DPPD':
+
+         # Aquí puedes obtener el nombre de la clase desde el formulario
+        nombre_clase = request.form.get('nombre_clase')
+
+        with conn.cursor() as cursor:
+            # Obtener el valor máximo actual de ClaseID en la tabla
+            cursor.execute("SELECT MAX(ClaseID) FROM PyEye_Clase WHERE DocenteID = 1")
+            row = cursor.fetchone()
+            if row[0] is not None:
+                clase_id = row[0] + 1
+            else:
+                clase_id = 1
+
+            # Insertar el nuevo registro en la tabla con DocenteID por defecto de 1 y ClaseID calculado
+            sql = "INSERT INTO PyEye_Clase (ClaseID, DocenteID, NombreClase) VALUES(?, 1, ?)"
+            cursor.execute(sql, clase_id, nombre_clase)
+            conn.commit()
+            conn.close()
+
+        # Continúa mostrando la página principal
+        encender_camara = False
+        username = session.get('username')
+        return render_template('Index.html', encender_camara=encender_camara, username=username)
+
 
 # Ejecutamos la app
 if __name__ == "__main__":
