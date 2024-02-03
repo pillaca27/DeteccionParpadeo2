@@ -9,15 +9,6 @@ import pygame.mixer
 import pyodbc
 
 
-# Establecer los valores de la conexión
-server = '20.51.212.0'  # Dirección IP o nombre del servidor SQL Server
-port = '62913'  # Número de puerto del servidor SQL Server
-database = 'Spring_CanevaroSaneamiento'  # Nombre de la base de datos
-username = 'caja'  # Nombre de usuario para autenticación
-password = 'cajaCusco2021'  # Contraseña del usuario
-
-# Construir la cadena de conexión
-connection_string = f"DRIVER={{ODBC Driver 17 for SQL Server}};SERVER={server},{port};DATABASE={database};UID={username};PWD={password}"
 
 # Establecer la conexión a la base de datos
 conn = pyodbc.connect(connection_string)
@@ -174,7 +165,7 @@ def gen_frame():
                                     reproducir_sonido = True
 
                                 # Mostrar el marco rojo durante 3 segundos
-                                if tiempo_transcurrido < 3:
+                                if tiempo_transcurrido < 6:
                                     cv2.rectangle(frame, (0, 0), (an, al), (0, 0, 255), -1)  # Dibuja un rectángulo rojo en todo el fotograma
                                 else:
                                     reproducir_sonido = False  # Desactiva el sonido
